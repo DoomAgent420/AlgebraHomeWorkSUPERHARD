@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Javeus.ai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#000000;
+    --bg-elevated:#141414;
+    --sidebar-bg:#000000;
+    --surface-light:#f1f1f1;
+    --surface-light-hover:#e4e4e4;
+    --text-primary:#ffffff;
+    --text-secondary:#a3a3a3;
+    --text-on-light:#202124;
+    --amber:#673ab7;
+    --amber-soft:#241a33;
+    --ice:#9575cd;
+    --ice-soft:#1e1a26;
+    --border:#2a2a2a;
+    --danger:#d93025;
+    --radius-sm:6px;
+    --radius-md:10px;
+    --radius-lg:16px;
+    --font-display:'Roboto', system-ui, -apple-system, sans-serif;
+    --font-body:'Roboto', system-ui, -apple-system, sans-serif;
+    --font-mono:ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text-primary);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important;} }
+  a{color:inherit;}
+  button{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--ice); outline-offset:2px;}
+
+  /* ---------- demo banner ---------- */
+  .demo-banner{
+    background:var(--amber-soft); color:var(--ice); font-size:12.5px; text-align:center;
+    padding:8px 14px; font-family:var(--font-mono);
+  }
+  .demo-banner b{color:var(--text-primary);}
+
+  /* ---------- shell ---------- */
+  .app-shell{display:flex; min-height:calc(100vh - 0px);}
+  .sidebar{
+    width:250px; flex-shrink:0; background:var(--sidebar-bg);
+    border-right:1px solid var(--border);
+    display:flex; flex-direction:column;
+    padding:22px 18px; position:sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  .brand{
+    font-family:var(--font-display); font-size:19px; font-weight:700;
+    margin:0 0 22px 4px; display:flex; align-items:center; gap:8px; letter-spacing:-.01em;
+  }
+  .brand-mark{width:10px; height:10px; border-radius:50%; background:var(--amber);}
+  .side-label{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--text-secondary);
+    margin:18px 4px 8px;
+  }
+  .side-label:first-of-type{margin-top:0;}
+  .char-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px;}
+  .char-list button{
+    all:unset; cursor:pointer; display:flex; align-items:center; gap:10px;
+    padding:8px 10px; border-radius:var(--radius-sm); font-size:14px; color:var(--text-primary); width:100%;
+  }
+  .char-list button:hover{background:var(--bg-elevated);}
+  .char-list button.active{background:var(--ice-soft); color:var(--ice);}
+  .avatar-dot{
+    width:22px; height:22px; border-radius:50%; flex-shrink:0;
+    background:var(--amber);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:600; color:#ffffff;
+  }
+  .nav-links{list-style:none; margin:6px 0 0; padding:0; display:flex; flex-direction:column; gap:2px;}
+  .nav-links button{
+    all:unset; cursor:pointer; width:100%; padding:9px 10px; border-radius:var(--radius-sm);
+    font-size:14px; color:var(--text-secondary);
+  }
+  .nav-links button:hover{background:var(--bg-elevated); color:var(--text-primary);}
+  .nav-links button.active{background:var(--amber-soft); color:var(--amber);}
+  .sidebar-footer{margin-top:auto; padding-top:16px; font-size:11px; color:var(--text-secondary); font-family:var(--font-mono);}
+  .sidebar-user{display:flex; align-items:center; justify-content:space-between; padding:8px 10px; margin-top:6px; border-top:1px solid var(--border); padding-top:14px;}
+  .sidebar-user span{font-size:12.5px; color:var(--text-secondary);}
+  .logout-btn{all:unset; cursor:pointer; font-size:11px; color:var(--text-secondary); font-family:var(--font-mono);}
+  .logout-btn:hover{color:var(--danger);}
+
+  .topbar{
+    display:none; position:sticky; top:0; z-index:20; background:var(--sidebar-bg);
+    border-bottom:1px solid var(--border); padding:12px 16px; align-items:center; gap:12px;
+  }
+  .topbar button{all:unset; cursor:pointer; padding:6px; color:var(--text-primary);}
+
+  .main{flex:1; min-width:0; overflow-y:auto;}
+  .main-inner{max-width:1080px; margin:0 auto; padding:32px 28px 80px;}
+
+  .connector{height:1px; border:0; margin:32px 0; background:var(--border);}
+
+  .feedback-tab{
+    position:fixed; right:16px; bottom:16px; z-index:40;
+    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary);
+    font-size:12px; padding:7px 12px; border-radius:999px; text-decoration:none;
+    opacity:.75; transition:opacity .15s ease;
+  }
+  .feedback-tab:hover{opacity:1; color:var(--text-primary); border-color:var(--amber);}
+  @media (max-width:860px){ .feedback-tab{ bottom:12px; right:12px; font-size:11px; padding:6px 10px; } }
+
+  /* ---------- login ---------- */
+  .auth-screen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;}
+  .auth-card{width:100%; max-width:360px;}
+  .auth-brand{display:flex; align-items:center; gap:9px; margin-bottom:26px; font-family:var(--font-display); font-size:22px; font-weight:700;}
+  .auth-brand .brand-mark{width:12px; height:12px;}
+  .auth-tabs{display:flex; gap:4px; margin-bottom:20px; background:var(--bg-elevated); border-radius:var(--radius-sm); padding:3px;}
+  .auth-tabs button{all:unset; cursor:pointer; flex:1; text-align:center; padding:8px; font-size:13px; border-radius:calc(var(--radius-sm) - 2px); color:var(--text-secondary);}
+  .auth-tabs button.active{background:var(--amber); color:#fff;}
+  .auth-error{color:var(--danger); font-size:12.5px; margin:-8px 0 14px;}
+  .auth-hint{font-size:11.5px; color:var(--text-secondary); margin-top:14px; line-height:1.5;}
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative; border-radius:var(--radius-lg); overflow:hidden;
+    height:210px; display:flex; align-items:flex-end; padding:24px;
+    background:#0c0d10;
+  }
+  .hero svg{position:absolute; inset:0; width:100%; height:100%;}
+  .hero-scrim{ position:absolute; inset:0; z-index:1; background:linear-gradient(0deg, rgba(0,0,0,.75) 0%, rgba(0,0,0,.15) 55%, transparent 80%); }
+  .hero-greeting{position:relative; z-index:2;}
+  .hero-greeting h1{ font-family:var(--font-display); font-weight:700; font-size:30px; margin:0; text-shadow:0 2px 12px rgba(0,0,0,.6); }
+  .hero-greeting p{margin:4px 0 0; color:#d8d8d8; font-size:14px; text-shadow:0 1px 8px rgba(0,0,0,.6);}
+
+  /* ---------- rows / cards ---------- */
+  .row-head{display:flex; align-items:baseline; justify-content:space-between; margin:0 0 14px;}
+  .row-head h2{font-family:var(--font-display); font-weight:500; font-size:19px; margin:0;}
+  .row-head span, .row-head a{font-size:12px; color:var(--text-secondary); font-family:var(--font-mono); text-decoration:none;}
+  .row-head a:hover{color:var(--amber);}
+  .card-row{display:flex; gap:14px; overflow-x:auto; padding-bottom:10px; scroll-snap-type:x proximity;}
+  .card-row::-webkit-scrollbar{height:6px;}
+  .card-row::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+  .persona-card{
+    scroll-snap-align:start; flex:0 0 210px; background:var(--surface-light); color:var(--text-on-light);
+    border-radius:var(--radius-md); padding:18px; cursor:pointer; border:1px solid transparent;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .persona-card:hover{background:var(--surface-light-hover); transform:translateY(-2px);}
+  .persona-card h3{margin:0 0 4px; font-family:var(--font-display); font-size:16px; font-weight:600;}
+  .persona-card p{margin:0; font-size:12px; color:#5b5f66;}
+  .persona-card .tag{display:inline-block; margin-top:10px; font-family:var(--font-mono); font-size:10px; letter-spacing:.04em; color:#5b5f66; text-transform:uppercase;}
+  .empty-note{font-size:13px; color:var(--text-secondary);}
+
+  /* ---------- forms ---------- */
+  .page-head{margin-bottom:24px;}
+  .page-head h1{font-family:var(--font-display); font-weight:500; font-size:26px; margin:0 0 6px;}
+  .page-head p{margin:0; color:var(--text-secondary); font-size:14px;}
+  .form-grid{display:grid; grid-template-columns:180px 1fr; gap:28px; align-items:start;}
+  .image-drop{
+    width:180px; height:180px; border-radius:var(--radius-md); border:1.5px dashed var(--border);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+    color:var(--text-secondary); font-size:12px; cursor:pointer; text-align:center; padding:10px;
+    background:var(--bg-elevated); overflow:hidden;
+  }
+  .image-drop:hover{border-color:var(--ice); color:var(--ice);}
+  .image-drop img{width:100%; height:100%; object-fit:cover;}
+  .field{margin-bottom:20px;}
+  .field-label-row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;}
+  .field label{font-size:13px; font-weight:500; color:var(--text-primary);}
+  .char-count{font-family:var(--font-mono); font-size:11px; color:var(--text-secondary);}
+  .char-count.over{color:var(--danger);}
+  .field input[type=text], .field input[type=password], .field textarea, .field select{
+    width:100%; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-primary);
+    border-radius:var(--radius-sm); padding:10px 12px; font-family:var(--font-body); font-size:14px; resize:vertical;
+  }
+  .field input:focus, .field textarea:focus{border-color:var(--ice);}
+  .field .hint{font-size:12px; color:var(--text-secondary); margin-top:5px;}
+
+  .template-row{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 28px;}
+  .template-chip{
+    all:unset; cursor:pointer; font-size:12.5px; padding:7px 13px; border-radius:999px;
+    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary);
+  }
+  .template-chip:hover{border-color:var(--amber); color:var(--amber);}
+
+  .btn{ all:unset; cursor:pointer; display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:var(--radius-sm); font-size:14px; font-weight:500; }
+  .btn[disabled]{opacity:.5; cursor:default;}
+  .btn-primary{background:var(--amber); color:#ffffff; width:100%; justify-content:center;}
+  .btn-primary:hover{filter:brightness(1.12);}
+  .btn-ghost{background:transparent; border:1px solid var(--border); color:var(--text-primary);}
+  .btn-ghost:hover{border-color:var(--text-secondary);}
+  .btn-danger-ghost{background:transparent; border:1px solid var(--border); color:var(--danger);}
+  .btn-danger-ghost:hover{border-color:var(--danger);}
+  .btn-row{display:flex; gap:10px; margin-top:8px;}
+
+  .persona-pick-list{display:flex; flex-direction:column; gap:8px; margin-top:8px;}
+  .persona-pick{display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-sm); font-size:13px;}
+  .persona-pick.active{border-color:var(--ice); color:var(--ice);}
+
+  .checkbox-row{display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:8px; font-size:13.5px; cursor:pointer;}
+  .checkbox-row input{accent-color:var(--amber);}
+
+  /* ---------- settings ---------- */
+  .settings-block{max-width:480px;}
+  .stat-line{display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); font-size:14px;}
+  .stat-line b{font-family:var(--font-mono); color:var(--amber);}
+  .disclaimer{margin-top:26px; padding:14px 16px; border-radius:var(--radius-sm); background:var(--ice-soft); color:var(--ice); font-size:12.5px; line-height:1.5;}
+  .footlink{font-size:12px; color:var(--text-secondary); margin-top:22px;}
+  .footlink a{color:var(--ice); text-decoration:none;}
+  .footlink a:hover{text-decoration:underline;}
+
+  /* ---------- chat ---------- */
+  .chat-shell{display:grid; grid-template-columns:1fr 260px; gap:0; margin:-32px -28px -80px;}
+  .chat-main{display:flex; flex-direction:column; height:100vh; border-left:1px solid var(--border); border-right:1px solid var(--border);}
+  .chat-header{padding:16px 22px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;}
+  .chat-header .stack{display:flex;}
+  .chat-header .stack .avatar-dot{margin-left:-8px; border:2px solid var(--bg); width:30px; height:30px; font-size:12px;}
+  .chat-header .stack .avatar-dot:first-child{margin-left:0;}
+  .chat-header h2{font-family:var(--font-display); font-size:17px; font-weight:600; margin:0;}
+  .chat-header p{margin:0; font-size:12px; color:var(--text-secondary);}
+  .chat-log{flex:1; overflow-y:auto; padding:22px; display:flex; flex-direction:column; gap:14px;}
+  .bubble-row{display:flex; flex-direction:column; max-width:62%;}
+  .bubble-row.human{align-self:flex-end; align-items:flex-end;}
+  .bubble-row.ai{align-self:flex-start; align-items:flex-start;}
+  .bubble-sender{font-size:11px; color:var(--text-secondary); font-family:var(--font-mono); margin-bottom:3px; padding:0 4px;}
+  .bubble{padding:12px 15px; border-radius:16px; font-size:14px; line-height:1.5;}
+  .bubble.ai{background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-primary); border-bottom-left-radius:4px;}
+  .bubble.human{background:var(--amber-soft); color:#ffffff; border-bottom-right-radius:4px;}
+  .typing{align-self:flex-start; font-size:12px; color:var(--text-secondary); font-family:var(--font-mono); padding-left:4px;}
+  .chat-disclaimer{text-align:center; font-size:11px; color:var(--text-secondary); padding:6px 0 0; font-family:var(--font-mono);}
+  .chat-input-row{padding:16px 22px 20px; border-top:1px solid var(--border); display:flex; gap:10px;}
+  .chat-input-row input{flex:1; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-primary); border-radius:999px; padding:12px 18px; font-size:14px; font-family:var(--font-body);}
+  .chat-input-row input:focus{border-color:var(--ice);}
+  .send-btn{ all:unset; cursor:pointer; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--amber); color:#ffffff; }
+  .send-btn[disabled]{opacity:.5; cursor:default;}
+  .quick-settings{padding:20px 18px; overflow-y:auto; height:100vh;}
+  .qs-block{margin-bottom:24px;}
+  .qs-block h4{font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-secondary); margin:0 0 10px;}
+  .history-item{all:unset; display:block; cursor:pointer; width:100%; font-size:12.5px; color:var(--text-secondary); padding:8px 10px; border-radius:var(--radius-sm);}
+  .history-item:hover{background:var(--bg-elevated); color:var(--text-primary);}
+
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-sm);}
+  .switch{position:relative; width:38px; height:22px; flex-shrink:0;}
+  .switch input{opacity:0; width:0; height:0;}
+  .slider{position:absolute; inset:0; background:var(--border); border-radius:999px; cursor:pointer; transition:background .15s ease;}
+  .slider:before{content:""; position:absolute; width:16px; height:16px; left:3px; top:3px; background:#fff; border-radius:50%; transition:transform .15s ease;}
+  .switch input:checked + .slider{background:var(--amber);}
+  .switch input:checked + .slider:before{transform:translateX(16px);}
+
+  @media (max-width:860px){
+    .sidebar{position:fixed; left:0; top:0; z-index:30; transform:translateX(-100%); transition:transform .2s ease; box-shadow:0 0 40px rgba(0,0,0,.5);}
+    .sidebar.open{transform:translateX(0);}
+    .topbar{display:flex;}
+    .main-inner{padding:22px 16px 70px;}
+    .form-grid{grid-template-columns:1fr;}
+    .image-drop{width:120px; height:120px;}
+    .chat-shell{grid-template-columns:1fr; margin:-22px -16px -70px;}
+    .quick-settings{display:none;}
+    .chat-main{border-left:none; border-right:none;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =====================================================================
+   CONFIG — point this at your deployed Worker (see worker/README.md).
+   Leave blank to run in local demo mode (fake data, no real AI, no
+   persistence between reloads) so the UI still previews standalone.
+   ===================================================================== */
+const API_BASE = "https://falling-truth-1eb4.chrisjlove2022.workers.dev"; // e.g. "https://javeus-api.yourname.workers.dev"
+const DEMO_MODE = !API_BASE;
+
+const FEEDBACK_URL = "https://forms.gle/JxWnSMDcmihmo4Ck9";
+const LANGUAGES = ['English','Mandarin Chinese','Hindi','Spanish','French','Arabic','Bengali','Portuguese','Russian','Urdu'];
+
+const TEMPLATES = [
+  { label:'Tabletop Game Master', name:'The Warden', description:"A tabletop game master who narrates your party's adventure, tracks stakes, and never breaks tension for long.", notes:'Describe scenes vividly. Ask "what do you do?" often. Keep NPCs distinct.' },
+  { label:'Homework Helper', name:'Professor Lin', description:'A patient tutor who walks through problems step by step instead of just giving answers.', notes:'Ask guiding questions before revealing solutions. Encouraging tone.' },
+  { label:'Startup Mentor', name:'Priya', description:'A no-nonsense startup mentor with big energy who pushes you to ship faster.', notes:'Confident, punchy one-liners. Calls out excuses kindly but directly.' },
+  { label:'Community Organizer', name:'Marcus', description:'A grounded community organizer who helps you think through causes worth fighting for.', notes:'Grounded, practical, avoids empty slogans. Asks who else is affected.' },
+  { label:'Straight-Talking Lawyer', name:'Denise', description:'A sharp, fast-talking advocate who explains the angles nobody else will say out loud.', notes:'Witty, a little theatrical, but always circles back to the real risk.' },
+  { label:'Stranded Space Pilot', name:'Kade', description:'A pilot stuck on a dying ship, methodically solving one system failure at a time.', notes:'Calm under pressure. Dry gallows humor. Loves technical detail.' },
+  { label:'Class Reunion Glow-Up', name:'Reese', description:'Someone walking back into their hometown reunion completely transformed, ready to rewrite old reputations.', notes:'Confident, a little nervous underneath it. References the "old days" sparingly.' },
+  { label:'Code Reviewer (strictly legal use)', name:'Byte', description:'A meticulous code reviewer who only ever helps with legitimate software — and jokes about the disclaimer constantly.', notes:'Deadpan about the "strictly legal" bit. Otherwise a sharp, precise reviewer.' },
+];
+
+/* =====================================================================
+   Backend — real fetch calls to the Worker, or an in-memory demo
+   standing in for it. Same method names either way so the rest of the
+   app never has to know which one it's talking to.
+   ===================================================================== */
+const RealBackend = {
+  async req(path, opts={}){
+    const res = await fetch(API_BASE + path, {
+      credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      ...opts,
+    });
+    let data = null;
+    try{ data = await res.json(); }catch(e){}
+    if(!res.ok) throw new Error((data && data.error) || 'Request failed');
+    return data;
+  },
+  signup: (username,password) => RealBackend.req('/api/auth/signup', {method:'POST', body:JSON.stringify({username,password})}),
+  login: (username,password) => RealBackend.req('/api/auth/login', {method:'POST', body:JSON.stringify({username,password})}),
+  logout: () => RealBackend.req('/api/auth/logout', {method:'POST'}),
+  me: () => RealBackend.req('/api/me'),
+  updateMe: (description) => RealBackend.req('/api/me', {method:'PUT', body:JSON.stringify({description})}),
+  listCharacters: () => RealBackend.req('/api/characters'),
+  createCharacter: (c) => RealBackend.req('/api/characters', {method:'POST', body:JSON.stringify(c)}),
+  listPersonas: () => RealBackend.req('/api/personas'),
+  createPersona: (p) => RealBackend.req('/api/personas', {method:'POST', body:JSON.stringify(p)}),
+  listRooms: () => RealBackend.req('/api/rooms'),
+  createRoom: (r) => RealBackend.req('/api/rooms', {method:'POST', body:JSON.stringify(r)}),
+  getMessages: (type,id) => RealBackend.req(`/api/messages?type=${type}&id=${id}`),
+  sendChat: (payload) => RealBackend.req('/api/chat', {method:'POST', body:JSON.stringify(payload)}),
+};
+
+const DemoBackend = (() => {
+  let users = {};
+  let currentUser = null;
+  let characters = [
+    { id:'c1', name:'Nova', description:'A stranded navigator plotting a course home, one star chart at a time.', notes:'Speaks in short, technical sentences. Dry humor about being lost.' },
+    { id:'c2', name:'Sage', description:'A blunt, well-read mentor who answers questions with better questions.', notes:'Never says "I understand." Prefers one-line answers.' },
+    { id:'c3', name:'Quill', description:'A slightly chaotic co-writer who always wants to raise the stakes.', notes:'Enthusiastic. Suggests wild plot twists unprompted.' },
+  ];
+  let personas = [];
+  let rooms = [];
+  let messages = {}; // key: type:id -> [{sender_type, sender_name, sender_id, content}]
+  const DEMO_REPLIES = {
+    short: ["Fair point.", "Tell me more.", "Hah — not what I expected.", "Go on.", "I like where this is going."],
+    long: [
+      "That's the kind of question I'd usually deflect with a joke, but I'll give it to you straight: it depends on what you're actually optimizing for here, and I don't think you've decided that yet.",
+      "Okay, walking through this with you — there are two ways this goes, and honestly the boring one is probably right, even though the other one sounds better out loud."
+    ]
+  };
+  const delay = (ms) => new Promise(r => setTimeout(r, ms));
+  const key = (t,id) => `${t}:${id}`;
+
+  return {
+    async signup(username, password){
+      await delay(200);
+      if(users[username]) throw new Error('That username is taken');
+      users[username] = { password, description:'' };
+      currentUser = { id:username, username, description:'' };
+      return currentUser;
+    },
+    async login(username, password){
+      await delay(200);
+      if(!users[username]) users[username] = { password, description:'' }; // demo: auto-register on first login
+      currentUser = { id:username, username, description: users[username].description };
+      return currentUser;
+    },
+    async logout(){ currentUser = null; },
+    async me(){ if(!currentUser) throw new Error('Not authenticated'); return currentUser; },
+    async updateMe(description){ currentUser.description = description; users[currentUser.username].description = description; },
+    async listCharacters(){ return characters; },
+    async createCharacter(c){ const row = {id:'c'+Date.now(), ...c}; characters.push(row); return row; },
+    async listPersonas(){ return personas; },
+    async createPersona(p){ const row = {id:'p'+Date.now(), ...p}; personas.push(row); return row; },
+    async listRooms(){
+      return rooms.map(r => ({...r, members: r.character_ids.map(id => characters.find(c=>c.id===id)).filter(Boolean)}));
+    },
+    async createRoom(r){
+      const row = {id:'r'+Date.now(), name:r.name, topic:r.topic||'', character_ids:r.character_ids, autoplay:0, turn_index:0};
+      rooms.push(row);
+      return {...row, members: row.character_ids.map(id => characters.find(c=>c.id===id))};
+    },
+    async getMessages(type, id){ return messages[key(type,id)] || []; },
+    async sendChat({type, id, message, persona_id, character_id_for_room}){
+      await delay(450);
+      const k = key(type,id);
+      if(!messages[k]) messages[k] = [];
+      if(message) messages[k].push({sender_type:'human', sender_name: currentUser.username, content: message});
+      let speakerName = 'AI';
+      if(type === 'character'){
+        const c = characters.find(c=>c.id===id);
+        speakerName = c.name;
+      } else {
+        const room = rooms.find(r=>r.id===id);
+        const members = room.character_ids.map(cid => characters.find(c=>c.id===cid));
+        let speaker = null;
+        if(message){
+          speaker = members.find(m => message.toLowerCase().includes('@'+m.name.toLowerCase()));
+        }
+        if(!speaker && character_id_for_room) speaker = members.find(m=>m.id===character_id_for_room);
+        if(!speaker){ speaker = members[room.turn_index % members.length]; room.turn_index = (room.turn_index+1) % members.length; }
+        speakerName = speaker.name;
+      }
+      const pool = Math.random() > .5 ? DEMO_REPLIES.short : DEMO_REPLIES.long;
+      const reply = pool[Math.floor(Math.random()*pool.length)];
+      messages[k].push({sender_type:'character', sender_name: speakerName, content: reply});
+      return { reply, sender_name: speakerName };
+    },
+  };
+})();
+
+const backend = DEMO_MODE ? DemoBackend : RealBackend;
+
+/* =====================================================================
+   State
+   ===================================================================== */
+const state = {
+  booted: false,
+  user: null,
+  authMode: 'login',
+  authError: '',
+  authBusy: false,
+  view: 'home',
+  sidebarOpen: false,
+  characters: [],
+  personas: [],
+  rooms: [],
+  communityCharacters: [
+    { name: 'Detective Vex', by: 'moonlitcode', tag: 'Noir Mystery' },
+    { name: 'Captain Wren', by: 'aurora_writes', tag: 'Sci-Fi' },
+    { name: 'Marla the Mentor', by: 'nightowl92', tag: 'Career Advice' },
+    { name: 'The Archivist', by: 'riverbend', tag: 'Fantasy Lore' },
+    { name: 'Coach Ilo', by: 'sunsetgrid', tag: 'Motivation' }
+  ],
+  activePersonaId: null,
+  activeChatCharId: null,
+  activeRoomId: null,
+  chatHistory: [],
+  messagesCache: {},
+  awaitingReply: false,
+  autoplayTimer: null,
+  language: 'English',
+  roomDraftName: '',
+  roomDraftChars: [],
+};
+
+function esc(str){ return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function charById(id){ return state.characters.find(c => c.id === id); }
+function roomById(id){ return state.rooms.find(r => r.id === id); }
+function msgKey(type,id){ return `${type}:${id}`; }
+
+/* =====================================================================
+   Boot
+   ===================================================================== */
+async function boot(){
+  try{
+    const user = await backend.me();
+    state.user = user;
+    await loadAll();
+  }catch(e){ state.user = null; }
+  state.booted = true;
+  render();
+}
+
+async function loadAll(){
+  const [characters, personas, rooms] = await Promise.all([
+    backend.listCharacters(), backend.listPersonas(), backend.listRooms()
+  ]);
+  state.characters = characters;
+  state.personas = personas;
+  state.rooms = rooms;
+}
+
+/* =====================================================================
+   Render
+   ===================================================================== */
+function render(){
+  const app = document.getElementById('app');
+  if(!state.booted){ app.innerHTML = `<div style="min-height:100vh;"></div>`; return; }
+  if(!state.user){ app.innerHTML = authScreen(); attachAuthHandlers(); return; }
+
+  app.innerHTML = `
+    ${DEMO_MODE ? `<div class="demo-banner"><b>Demo mode</b> — no backend connected, using fake data that resets on reload. Set <code>API_BASE</code> at the top of the script once your Worker is deployed.</div>` : ''}
+    <div class="app-shell">
+      <aside class="sidebar ${state.sidebarOpen ? 'open' : ''}">${sidebarHtml()}</aside>
+      <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+        <div class="topbar">
+          <button id="hamburger" aria-label="Toggle menu">☰</button>
+          <strong style="font-family:var(--font-display);">Javeus.ai</strong>
+        </div>
+        <main class="main"><div class="main-inner">${viewHtml()}</div></main>
+      </div>
+    </div>
+    <a class="feedback-tab" href="${FEEDBACK_URL}" target="_blank" rel="noopener">Feedback</a>
+  `;
+  attachHandlers();
+}
+
+/* ---------------- auth screen ---------------- */
+function authScreen(){
+  return `
+    <div class="auth-screen">
+      <div class="auth-card">
+        <div class="auth-brand"><span class="brand-mark"></span>Javeus.ai</div>
+        <div class="auth-tabs">
+          <button data-authmode="login" class="${state.authMode==='login'?'active':''}">Log in</button>
+          <button data-authmode="signup" class="${state.authMode==='signup'?'active':''}">Sign up</button>
+        </div>
+        ${state.authError ? `<div class="auth-error">${esc(state.authError)}</div>` : ''}
+        <form id="authForm">
+          <div class="field">
+            <label for="authUsername">Username</label>
+            <input type="text" id="authUsername" maxlength="20" autocomplete="username" required>
+          </div>
+          <div class="field">
+            <label for="authPassword">Password</label>
+            <input type="password" id="authPassword" autocomplete="${state.authMode==='login'?'current-password':'new-password'}" required>
+          </div>
+          <button type="submit" class="btn btn-primary" ${state.authBusy?'disabled':''}>${state.authBusy ? 'Please wait…' : (state.authMode==='login' ? 'Log in' : 'Create account')}</button>
+        </form>
+        <p class="auth-hint">${DEMO_MODE ? 'Demo mode: any username/password works and nothing is saved beyond this tab.' : 'Your password is hashed server-side. No email required.'}</p>
+      </div>
+    </div>
+  `;
+}
+
+function attachAuthHandlers(){
+  document.querySelectorAll('[data-authmode]').forEach(btn => {
+    btn.addEventListener('click', () => { state.authMode = btn.dataset.authmode; state.authError=''; render(); });
+  });
+  const form = document.getElementById('authForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('authUsername').value.trim();
+    const password = document.getElementById('authPassword').value;
+    state.authBusy = true; state.authError = ''; render();
+    try{
+      const user = state.authMode === 'login' ? await backend.login(username,password) : await backend.signup(username,password);
+      state.user = user;
+      await loadAll();
+    }catch(err){
+      state.authError = err.message || 'Something went wrong';
+    }
+    state.authBusy = false;
+    render();
+  });
+}
+
+/* ---------------- sidebar ---------------- */
+function sidebarHtml(){
+  return `
+    <div class="brand"><span class="brand-mark"></span>Javeus.ai</div>
+    <div class="side-label">Your characters</div>
+    <ul class="char-list">
+      ${state.characters.map(c => `
+        <li><button data-goto-chat="${c.id}" class="${state.view==='chat' && state.activeChatCharId===c.id ? 'active':''}">
+          <span class="avatar-dot">${esc(c.name[0])}</span>${esc(c.name)}
+        </button></li>`).join('') || '<li style="padding:8px 10px; font-size:12.5px; color:var(--text-secondary);">None yet</li>'}
+    </ul>
+    <div class="side-label">Rooms</div>
+    <ul class="char-list">
+      ${state.rooms.map(r => `
+        <li><button data-goto-room="${r.id}" class="${state.view==='room' && state.activeRoomId===r.id ? 'active':''}">
+          <span class="avatar-dot">${esc(r.name[0])}</span>${esc(r.name)}
+        </button></li>`).join('') || '<li style="padding:8px 10px; font-size:12.5px; color:var(--text-secondary);">None yet</li>'}
+    </ul>
+    <div class="side-label">Build</div>
+    <ul class="nav-links">
+      <li><button data-goto="home" class="${state.view==='home'?'active':''}">Home</button></li>
+      <li><button data-goto="characterCreator" class="${state.view==='characterCreator'?'active':''}">Character Creator</button></li>
+      <li><button data-goto="personaCreator" class="${state.view==='personaCreator'?'active':''}">Persona Creator</button></li>
+      <li><button data-goto="roomCreator" class="${state.view==='roomCreator'?'active':''}">Room Creator</button></li>
+      <li><button data-goto="settings" class="${state.view==='settings'?'active':''}">User settings</button></li>
+    </ul>
+    <div class="sidebar-user">
+      <span>${esc(state.user.username)}</span>
+      <button class="logout-btn" id="logoutBtn">Log out</button>
+    </div>
+    <div class="sidebar-footer">v0.2 · ${DEMO_MODE ? 'demo mode' : 'live'}</div>
+  `;
+}
+
+/* ---------------- hero art ---------------- */
+function heroArt(){
+  return `
+    <svg viewBox="0 0 800 210" preserveAspectRatio="xMidYMax slice">
+      <defs>
+        <linearGradient id="skyGlow" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3a3f47"/>
+          <stop offset="55%" stop-color="#caa15a" stop-opacity=".5"/>
+          <stop offset="100%" stop-color="#8a6a35" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="riverGlow" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3a4551"/>
+          <stop offset="100%" stop-color="#12161c"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="800" height="135" fill="url(#skyGlow)"/>
+      <path d="M0,98 Q80,72 160,92 T320,88 T480,94 T640,82 T800,92 L800,135 L0,135 Z" fill="#caa15a" opacity=".25"/>
+      <rect x="0" y="137" width="800" height="73" fill="url(#riverGlow)"/>
+      <rect x="0" y="137" width="800" height="3" fill="#7c8b99" opacity=".45"/>
+      <path d="M260,133 C260,98 340,82 400,82 C460,82 540,98 540,133" fill="none" stroke="#5b2f28" stroke-width="10"/>
+      <rect x="252" y="127" width="296" height="10" fill="#5b2f28"/>
+      <g fill="#0d1013">
+        <ellipse cx="55" cy="122" rx="72" ry="48"/><ellipse cx="140" cy="135" rx="60" ry="40"/>
+        <ellipse cx="705" cy="120" rx="82" ry="50"/><ellipse cx="765" cy="137" rx="55" ry="36"/>
+      </g>
+      <g fill="#e9edf0" opacity=".8">
+        <ellipse cx="42" cy="98" rx="30" ry="8"/><ellipse cx="118" cy="114" rx="24" ry="7"/>
+        <ellipse cx="690" cy="96" rx="34" ry="8"/><ellipse cx="748" cy="116" rx="22" ry="7"/>
+      </g>
+    </svg>
+  `;
+}
+
+/* ---------------- view router ---------------- */
+function viewHtml(){
+  if(state.view === 'home') return viewHome();
+  if(state.view === 'characterCreator') return viewCharacterCreator();
+  if(state.view === 'personaCreator') return viewPersonaCreator();
+  if(state.view === 'roomCreator') return viewRoomCreator();
+  if(state.view === 'settings') return viewSettings();
+  if(state.view === 'chat') return viewChat();
+  if(state.view === 'room') return viewRoom();
+  return '';
+}
+
+function viewHome(){
+  return `
+    <div class="hero">
+      ${heroArt()}
+      <div class="hero-scrim"></div>
+      <div class="hero-greeting">
+        <h1>Hello, ${esc(state.user.username)}</h1>
+        <p>${state.characters.length} character${state.characters.length===1?'':'s'} · ${state.rooms.length} room${state.rooms.length===1?'':'s'}</p>
+      </div>
+    </div>
+    <hr class="connector">
+    <div class="row-head"><h2>From the community</h2><span>scroll →</span></div>
+    <div class="card-row">
+      ${state.communityCharacters.map(c => `
+        <div class="persona-card" tabindex="0">
+          <h3>${esc(c.name)}</h3><p>By: ${esc(c.by)}</p><span class="tag">${esc(c.tag)}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function templateChips(){
+  return `
+    <div class="field-label-row" style="margin-top:2px;"><label>Stuck? Try one of these</label></div>
+    <div class="template-row">
+      ${TEMPLATES.map((t,i) => `<button type="button" class="template-chip" data-template="${i}">${esc(t.label)}</button>`).join('')}
+    </div>
+  `;
+}
+
+function viewCharacterCreator(){
+  return `
+    <div class="page-head"><h1>Character Creator</h1><p>This is the character other people (and you) will talk to.</p></div>
+    ${templateChips()}
+    <form id="charForm">
+      <div class="form-grid">
+        <label class="image-drop" for="charImage"><span>Upload image<br><span style="opacity:.6">max 5GB</span></span><input type="file" id="charImage" accept="image/*" style="display:none"></label>
+        <div>
+          <div class="field"><div class="field-label-row"><label for="charName">Name</label><span class="char-count" id="charNameCount">0/20</span></div><input type="text" id="charName" maxlength="20" placeholder="e.g. Nova" autocomplete="off"></div>
+          <div class="field"><div class="field-label-row"><label for="charDesc">Description</label><span class="char-count" id="charDescCount">0/750</span></div><textarea id="charDesc" maxlength="750" rows="4" placeholder="Who are they? What do they want?"></textarea></div>
+          <div class="field"><div class="field-label-row"><label for="charNotes">Notes for the AI</label><span class="char-count" id="charNotesCount">0/300</span></div><textarea id="charNotes" maxlength="300" rows="3" placeholder="Voice, tone, quirks — how should they actually sound?"></textarea><div class="hint">This is the part that keeps them from sounding generic.</div></div>
+        </div>
+      </div>
+      <div class="btn-row"><button type="submit" class="btn btn-primary" style="width:auto;">Save character</button><button type="button" class="btn btn-ghost" data-goto="home">Cancel</button></div>
+    </form>
+  `;
+}
+
+function viewPersonaCreator(){
+  return `
+    <div class="page-head"><h1>Persona Creator</h1><p>This is who <em>you</em> are in the conversation. Optional, but characters respond better with one set.</p></div>
+    <form id="personaForm">
+      <div class="form-grid">
+        <label class="image-drop" for="personaImage"><span>Upload image<br><span style="opacity:.6">max 5GB</span></span><input type="file" id="personaImage" accept="image/*" style="display:none"></label>
+        <div>
+          <div class="field"><div class="field-label-row"><label for="personaName">Name</label><span class="char-count" id="personaNameCount">0/20</span></div><input type="text" id="personaName" maxlength="20" placeholder="e.g. Wanderer" autocomplete="off"></div>
+          <div class="field"><div class="field-label-row"><label for="personaDesc">Description</label><span class="char-count" id="personaDescCount">0/750</span></div><textarea id="personaDesc" maxlength="750" rows="4" placeholder="How do you want to show up in these chats?"></textarea></div>
+        </div>
+      </div>
+      <div class="btn-row"><button type="submit" class="btn btn-primary" style="width:auto;">Save persona</button><button type="button" class="btn btn-ghost" data-goto="home">Cancel</button></div>
+    </form>
+    <hr class="connector">
+    <div class="row-head"><h2>Your personas</h2></div>
+    <div class="persona-pick-list">
+      ${state.personas.map(p => `
+        <div class="persona-pick ${state.activePersonaId===p.id?'active':''}"><span>${esc(p.name)}</span><button class="btn btn-ghost" style="padding:6px 12px; font-size:12px;" data-set-persona="${p.id}">${state.activePersonaId===p.id ? 'Active' : 'Use this'}</button></div>
+      `).join('') || '<p class="empty-note">No personas yet.</p>'}
+    </div>
+  `;
+}
+
+function viewRoomCreator(){
+  return `
+    <div class="page-head"><h1>Room Creator</h1><p>Drop 2 or more characters in together. Talk to them yourself, or hit autoplay and watch them go.</p></div>
+    <form id="roomForm">
+      <div class="field"><div class="field-label-row"><label for="roomName">Room name</label><span class="char-count" id="roomNameCount">0/40</span></div><input type="text" id="roomName" maxlength="40" placeholder="e.g. Late Night Debate Club" autocomplete="off"></div>
+      <div class="field"><div class="field-label-row"><label for="roomTopic">Topic / scenario (optional)</label><span class="char-count" id="roomTopicCount">0/300</span></div><textarea id="roomTopic" maxlength="300" rows="2" placeholder="Give the room some direction — e.g. 'arguing about whether the ship should turn back'"></textarea></div>
+      <div class="field">
+        <label style="display:block; margin-bottom:8px;">Characters in this room</label>
+        ${state.characters.map(c => `
+          <label class="checkbox-row"><input type="checkbox" value="${c.id}" class="room-char-check"> ${esc(c.name)}</label>
+        `).join('') || '<p class="empty-note">Create at least 2 characters first.</p>'}
+      </div>
+      <div class="btn-row"><button type="submit" class="btn btn-primary" style="width:auto;">Create room</button><button type="button" class="btn btn-ghost" data-goto="home">Cancel</button></div>
+    </form>
+  `;
+}
+
+function viewSettings(){
+  return `
+    <div class="page-head"><h1>User settings</h1><p>General account info — nothing here is shared unless you choose to.</p></div>
+    <div class="settings-block">
+      <div class="field"><label>Username</label><input type="text" value="${esc(state.user.username)}" disabled></div>
+      <div class="field"><div class="field-label-row"><label for="settingsDesc">Description</label><span class="char-count" id="settingsDescCount">${(state.user.description||'').length}/500</span></div><textarea id="settingsDesc" maxlength="500" rows="3">${esc(state.user.description||'')}</textarea></div>
+      <button class="btn btn-primary" id="saveSettings" style="width:auto;">Save changes</button>
+      <div class="stat-line"><span>Bots made</span><b>${state.characters.length}</b></div>
+      <div class="stat-line"><span>Rooms made</span><b>${state.rooms.length}</b></div>
+      <div class="disclaimer">Remember: these characters aren't real. Don't take what they're saying to heart.</div>
+      <div class="footlink">Suggestions for the site? <a href="${FEEDBACK_URL}" target="_blank" rel="noopener">Tell us here</a></div>
+    </div>
+  `;
+}
+
+function bubbleHtml(m){
+  const isHuman = m.sender_type === 'human';
+  return `
+    <div class="bubble-row ${isHuman?'human':'ai'}">
+      ${!isHuman ? `<div class="bubble-sender">${esc(m.sender_name)}</div>` : ''}
+      <div class="bubble ${isHuman?'human':'ai'}">${esc(m.content)}</div>
+    </div>
+  `;
+}
+
+function viewChat(){
+  const c = charById(state.activeChatCharId) || state.characters[0];
+  if(!c) return `<p class="empty-note">Create a character first.</p>`;
+  state.activeChatCharId = c.id;
+  const log = state.messagesCache[msgKey('character',c.id)] || [];
+  const activePersona = state.personas.find(p => p.id === state.activePersonaId);
+
+  return `
+    <div class="chat-shell">
+      <div class="chat-main">
+        <div class="chat-header">
+          <span class="avatar-dot" style="width:34px;height:34px;font-size:14px;">${esc(c.name[0])}</span>
+          <div><h2>${esc(c.name)}</h2><p>${esc(c.notes || '')}</p></div>
+        </div>
+        <div class="chat-log" id="chatLog">
+          ${log.map(bubbleHtml).join('')}
+          ${state.awaitingReply ? `<div class="typing">${esc(c.name)} is typing…</div>` : ''}
+        </div>
+        <div class="chat-disclaimer">${esc(c.name)} isn't real — nothing here is a substitute for real people or real advice.</div>
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="Type your message${activePersona ? ' as ' + activePersona.name : ''}..." ${state.awaitingReply?'disabled':''}>
+          <button class="send-btn" id="sendBtn" aria-label="Send" ${state.awaitingReply?'disabled':''}>➜</button>
+        </div>
+      </div>
+      <div class="quick-settings">
+        <div class="qs-block"><h4>Quick settings</h4><button class="btn btn-danger-ghost" style="width:100%; justify-content:center;" id="resetChat">Reset chat</button></div>
+        <div class="qs-block"><h4>Persona</h4>
+          <select id="personaSelect" style="width:100%; background:var(--bg-elevated); color:var(--text-primary); border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px;">
+            <option value="">None</option>
+            ${state.personas.map(p => `<option value="${p.id}" ${state.activePersonaId===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="qs-block"><h4>Character</h4><button class="btn btn-ghost" style="width:100%; justify-content:center;" id="downloadChar">Download .json</button></div>
+        <div class="qs-block"><h4>History</h4>
+          ${state.chatHistory.slice(-3).reverse().map(h => `<button class="history-item" data-goto-chat="${h.id}">${esc(h.name)}</button>`).join('') || '<p style="font-size:12px; color:var(--text-secondary);">No history yet.</p>'}
+        </div>
+        <div class="qs-block"><h4>Language</h4>
+          <select id="languageSelect" style="width:100%; background:var(--bg-elevated); color:var(--text-primary); border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px;">
+            ${LANGUAGES.map(l => `<option ${state.language===l?'selected':''}>${l}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function viewRoom(){
+  const room = roomById(state.activeRoomId) || state.rooms[0];
+  if(!room) return `<p class="empty-note">Create a room first — you need at least 2 characters.</p>`;
+  state.activeRoomId = room.id;
+  const log = state.messagesCache[msgKey('room',room.id)] || [];
+  const activePersona = state.personas.find(p => p.id === state.activePersonaId);
+
+  return `
+    <div class="chat-shell">
+      <div class="chat-main">
+        <div class="chat-header">
+          <div class="stack">${room.members.map(m => `<span class="avatar-dot">${esc(m.name[0])}</span>`).join('')}</div>
+          <div><h2>${esc(room.name)}</h2><p>${room.members.map(m=>esc(m.name)).join(', ')}${room.topic ? ' · ' + esc(room.topic) : ''}</p></div>
+        </div>
+        <div class="chat-log" id="chatLog">
+          ${log.map(bubbleHtml).join('')}
+          ${state.awaitingReply ? `<div class="typing">someone's typing…</div>` : ''}
+        </div>
+        <div class="chat-disclaimer">Nobody in this room is real. Tag someone with @name to call on them directly.</div>
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="Type a message, or @mention someone..." ${state.awaitingReply?'disabled':''}>
+          <button class="send-btn" id="sendBtn" aria-label="Send" ${state.awaitingReply?'disabled':''}>➜</button>
+        </div>
+      </div>
+      <div class="quick-settings">
+        <div class="qs-block"><h4>Autoplay</h4>
+          <div class="toggle-row"><span>Let them talk</span><label class="switch"><input type="checkbox" id="autoplayToggle" ${room.autoplay?'checked':''}><span class="slider"></span></label></div>
+        </div>
+        <div class="qs-block"><h4>Persona</h4>
+          <select id="personaSelect" style="width:100%; background:var(--bg-elevated); color:var(--text-primary); border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px;">
+            <option value="">None</option>
+            ${state.personas.map(p => `<option value="${p.id}" ${state.activePersonaId===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="qs-block"><h4>Members</h4>
+          ${room.members.map(m => `<div class="history-item" style="cursor:default;">${esc(m.name)}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------------- handlers ---------------- */
+function attachHandlers(){
+  document.querySelectorAll('[data-goto]').forEach(el => el.addEventListener('click', () => { stopAutoplay(); state.view = el.dataset.goto; state.sidebarOpen=false; render(); }));
+
+  document.querySelectorAll('[data-goto-chat]').forEach(el => el.addEventListener('click', async () => {
+    stopAutoplay();
+    const c = charById(el.dataset.gotoChat);
+    if(!c) return;
+    state.view = 'chat'; state.activeChatCharId = c.id; state.sidebarOpen = false;
+    if(!state.chatHistory.some(h=>h.id===c.id)) state.chatHistory.push({id:c.id, name:c.name});
+    await ensureMessagesLoaded('character', c.id);
+    render();
+  }));
+
+  document.querySelectorAll('[data-goto-room]').forEach(el => el.addEventListener('click', async () => {
+    stopAutoplay();
+    const r = roomById(el.dataset.gotoRoom);
+    if(!r) return;
+    state.view = 'room'; state.activeRoomId = r.id; state.sidebarOpen = false;
+    await ensureMessagesLoaded('room', r.id);
+    render();
+  }));
+
+  const hamburger = document.getElementById('hamburger');
+  if(hamburger) hamburger.addEventListener('click', () => { state.sidebarOpen = !state.sidebarOpen; render(); });
+
+  const logoutBtn = document.getElementById('logoutBtn');
+  if(logoutBtn) logoutBtn.addEventListener('click', async () => { stopAutoplay(); await backend.logout(); state.user = null; render(); });
+
+  /* character creator */
+  const charForm = document.getElementById('charForm');
+  if(charForm){
+    bindCounter('charName','charNameCount',20); bindCounter('charDesc','charDescCount',750); bindCounter('charNotes','charNotesCount',300);
+    document.querySelectorAll('[data-template]').forEach(chip => chip.addEventListener('click', () => {
+      const t = TEMPLATES[chip.dataset.template];
+      document.getElementById('charName').value = t.name;
+      document.getElementById('charDesc').value = t.description;
+      document.getElementById('charNotes').value = t.notes;
+      ['charName','charDesc','charNotes'].forEach(id => document.getElementById(id).dispatchEvent(new Event('input')));
+    }));
+    charForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = document.getElementById('charName').value.trim() || 'Unnamed';
+      const description = document.getElementById('charDesc').value.trim();
+      const notes = document.getElementById('charNotes').value.trim();
+      const row = await backend.createCharacter({name, description, notes});
+      state.characters.push(row);
+      state.view = 'home'; render();
+    });
+  }
+
+  /* persona creator */
+  const personaForm = document.getElementById('personaForm');
+  if(personaForm){
+    bindCounter('personaName','personaNameCount',20); bindCounter('personaDesc','personaDescCount',750);
+    personaForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = document.getElementById('personaName').value.trim() || 'Unnamed';
+      const description = document.getElementById('personaDesc').value.trim();
+      const row = await backend.createPersona({name, description});
+      state.personas.push(row); render();
+    });
+    document.querySelectorAll('[data-set-persona]').forEach(btn => btn.addEventListener('click', () => { state.activePersonaId = btn.dataset.setPersona; render(); }));
+  }
+
+  /* room creator */
+  const roomForm = document.getElementById('roomForm');
+  if(roomForm){
+    bindCounter('roomName','roomNameCount',40);
+    bindCounter('roomTopic','roomTopicCount',300);
+    roomForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = document.getElementById('roomName').value.trim() || 'Untitled Room';
+      const topic = document.getElementById('roomTopic').value.trim();
+      const character_ids = [...document.querySelectorAll('.room-char-check:checked')].map(c => c.value);
+      if(character_ids.length < 2){ alert('Pick at least 2 characters.'); return; }
+      const row = await backend.createRoom({name, topic, character_ids});
+      state.rooms.push(row); state.view = 'home'; render();
+    });
+  }
+
+  /* settings */
+  const settingsDesc = document.getElementById('settingsDesc');
+  if(settingsDesc){
+    bindCounter('settingsDesc','settingsDescCount',500);
+    document.getElementById('saveSettings').addEventListener('click', async () => {
+      const description = settingsDesc.value.trim();
+      await backend.updateMe(description);
+      state.user.description = description; render();
+    });
+  }
+
+  /* chat (character or room) */
+  const sendBtn = document.getElementById('sendBtn');
+  if(sendBtn){
+    const input = document.getElementById('chatInput');
+    const isRoom = state.view === 'room';
+    const convType = isRoom ? 'room' : 'character';
+    const convId = isRoom ? state.activeRoomId : state.activeChatCharId;
+
+    const doSend = async () => {
+      const text = input.value.trim();
+      if(!text || state.awaitingReply) return;
+      input.value = '';
+      const k = msgKey(convType, convId);
+      state.messagesCache[k] = state.messagesCache[k] || [];
+      state.messagesCache[k].push({sender_type:'human', sender_name: (state.personas.find(p=>p.id===state.activePersonaId)||state.user).username || state.personas.find(p=>p.id===state.activePersonaId)?.name || state.user.username, content: text});
+      state.awaitingReply = true; render(); scrollChatToBottom();
+      try{
+        const res = await backend.sendChat({type: convType, id: convId, message: text, persona_id: state.activePersonaId});
+        state.messagesCache[k].push({sender_type:'character', sender_name: res.sender_name, content: res.reply});
+      }catch(err){
+        state.messagesCache[k].push({sender_type:'character', sender_name:'System', content: 'Something went wrong reaching the model: ' + err.message});
+      }
+      state.awaitingReply = false; render(); scrollChatToBottom();
+    };
+    sendBtn.addEventListener('click', doSend);
+    input.addEventListener('keydown', e => { if(e.key==='Enter') doSend(); });
+    scrollChatToBottom();
+
+    if(!isRoom){
+      document.getElementById('resetChat').addEventListener('click', () => {
+        if(confirm('Reset this chat? This clears it from view (history stays on the server).')){
+          state.messagesCache[msgKey('character',convId)] = []; render();
+        }
+      });
+      document.getElementById('downloadChar').addEventListener('click', () => {
+        const c = charById(convId);
+        const blob = new Blob([JSON.stringify(c, null, 2)], {type:'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${c.name.replace(/\s+/g,'_')}.json`; a.click();
+      });
+      document.getElementById('languageSelect').addEventListener('change', e => { state.language = e.target.value; });
+    } else {
+      const autoplayToggle = document.getElementById('autoplayToggle');
+      autoplayToggle.addEventListener('change', e => {
+        const room = roomById(convId);
+        room.autoplay = e.target.checked ? 1 : 0;
+        if(room.autoplay) startAutoplay(room.id); else stopAutoplay();
+      });
+      if(roomById(convId).autoplay) startAutoplay(convId);
+    }
+
+    document.getElementById('personaSelect').addEventListener('change', e => { state.activePersonaId = e.target.value || null; render(); });
+  }
+}
+
+function startAutoplay(roomId){
+  stopAutoplay();
+  state.autoplayTimer = setInterval(async () => {
+    if(state.awaitingReply || state.view !== 'room' || state.activeRoomId !== roomId) return;
+    state.awaitingReply = true; render();
+    try{
+      const res = await backend.sendChat({type:'room', id: roomId, message: null, persona_id: state.activePersonaId});
+      const k = msgKey('room', roomId);
+      state.messagesCache[k] = state.messagesCache[k] || [];
+      state.messagesCache[k].push({sender_type:'character', sender_name: res.sender_name, content: res.reply});
+    }catch(err){ /* quietly skip a beat on error */ }
+    state.awaitingReply = false; render(); scrollChatToBottom();
+  }, 4000);
+}
+function stopAutoplay(){ if(state.autoplayTimer){ clearInterval(state.autoplayTimer); state.autoplayTimer = null; } }
+
+async function ensureMessagesLoaded(type, id){
+  const k = msgKey(type,id);
+  if(state.messagesCache[k]) return;
+  try{ state.messagesCache[k] = await backend.getMessages(type,id); }
+  catch(e){ state.messagesCache[k] = []; }
+}
+
+function scrollChatToBottom(){
+  requestAnimationFrame(() => { const log = document.getElementById('chatLog'); if(log) log.scrollTop = log.scrollHeight; });
+}
+
+function bindCounter(inputId, countId, max){
+  const input = document.getElementById(inputId);
+  const count = document.getElementById(countId);
+  const update = () => { const len = input.value.length; count.textContent = `${len}/${max}`; count.classList.toggle('over', len >= max); };
+  input.addEventListener('input', update);
+}
+
+boot();
+</script>
+</body>
+</html>
